@@ -12,3 +12,5 @@
 *.class
 .idea/
 dist/
+bin/
+out/
