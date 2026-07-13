@@ -27,6 +27,7 @@ public class ControlPanel extends JPanel {
     private JButton btnLoadPreset;
     private JButton btnClear;
     private JButton btnFitView;
+    private JButton btnToggleMap;
 
     // ─── Statistics labels ─────────────────────────
     private JLabel lblMaxFlow;
@@ -248,8 +249,10 @@ public class ControlPanel extends JPanel {
         // ─── Tools Section ─────────────────────────
         btnGoToEvents = ThemeManager.createStyledButton("Eventos de Simulacion \u2699\uFE0F", new Color(63, 81, 181),
                 new Color(92, 107, 192));
-        btnLoadPreset = ThemeManager.createStyledButton("Cargar Red Predeterminada", ThemeManager.BTN_PRIMARY,
-                ThemeManager.BTN_PRIMARY_HOVER);
+        btnLoadPreset = ThemeManager.createStyledButton("\uD83D\uDDFA\uFE0F Mapas y Presets", new Color(21, 101, 192),
+                new Color(30, 136, 229));
+        btnToggleMap = ThemeManager.createStyledButton("Mostrar/Ocultar Mapa", new Color(56, 142, 60),
+                new Color(76, 175, 80));
         btnFitView = ThemeManager.createStyledButton("Ajustar Vista", new Color(97, 97, 97),
                 new Color(117, 117, 117));
         btnReset = ThemeManager.createStyledButton("\u21BA Reiniciar Flujo", ThemeManager.BTN_WARNING,
@@ -260,6 +263,8 @@ public class ControlPanel extends JPanel {
         addFullWidthButton(btnGoToEvents);
         add(Box.createVerticalStrut(4));
         addFullWidthButton(btnLoadPreset);
+        add(Box.createVerticalStrut(4));
+        addFullWidthButton(btnToggleMap);
         add(Box.createVerticalStrut(4));
         addFullWidthButton(btnFitView);
         add(Box.createVerticalStrut(4));
@@ -309,6 +314,9 @@ public class ControlPanel extends JPanel {
         });
         btnGoToEvents.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) { cardLayout.show(ControlPanel.this, "EVENTS"); }
+        });
+        btnToggleMap.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) { if (controller != null) controller.toggleMap(); }
         });
         btnBackToMain.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) { cardLayout.show(ControlPanel.this, "MAIN"); }

@@ -313,43 +313,21 @@ public class NetworkGraph {
     // ═══════════════════════════════════════════════
 
     /**
+     * Loads a preset network of the given type.
+     * Delegates to NetworkPresets for all preset/procedural networks.
+     */
+    public void loadPreset(NetworkPresets.PresetType type) {
+        NetworkPresets.loadPreset(this, type);
+    }
+
+    /**
      * Loads a preset network: "Red Hidrica de Roraima"
      * Includes 3 reservoirs, 3 pumping stations, and 5 neighborhoods
      * with 13 pipe connections of varying capacities.
+     * @deprecated Use loadPreset(NetworkPresets.PresetType.RORAIMA_CLASSIC) instead.
      */
+    @Deprecated
     public void loadPresetRoraima() {
-        clear();
-
-        // ─── Embalses (Sources) ────────────────────
-        Node guri = addNode("Embalse Guri", Node.NodeType.EMBALSE, 150, 80, 50);
-        Node caroni = addNode("Embalse Caroni", Node.NodeType.EMBALSE, 450, 60, 35);
-        Node paragua = addNode("Embalse Paragua", Node.NodeType.EMBALSE, 750, 80, 25);
-
-        // ─── Estaciones (Intermediate) ─────────────
-        Node estNorte = addNode("Est. Bombeo Norte", Node.NodeType.ESTACION, 200, 280);
-        Node estCentral = addNode("Est. Bombeo Central", Node.NodeType.ESTACION, 500, 260);
-        Node estSur = addNode("Est. Bombeo Sur", Node.NodeType.ESTACION, 750, 300);
-
-        // ─── Barrios (Sinks) ───────────────────────
-        Node santaElena = addNode("Santa Elena", Node.NodeType.BARRIO, 100, 480, 20);
-        Node boaVista = addNode("Boa Vista", Node.NodeType.BARRIO, 300, 500, 25);
-        Node ciudadBolivar = addNode("Ciudad Bolivar", Node.NodeType.BARRIO, 500, 480, 30);
-        Node puertoOrdaz = addNode("Puerto Ordaz", Node.NodeType.BARRIO, 680, 510, 20);
-        Node tumeremo = addNode("Tumeremo", Node.NodeType.BARRIO, 850, 480, 15);
-
-        // ─── Tuberias (Pipes) ──────────────────────
-        addEdge(guri, estNorte, 30);
-        addEdge(guri, estCentral, 25);
-        addEdge(caroni, estNorte, 20);
-        addEdge(caroni, estCentral, 30);
-        addEdge(paragua, estCentral, 15);
-        addEdge(paragua, estSur, 25);
-        addEdge(estNorte, santaElena, 18);
-        addEdge(estNorte, boaVista, 22);
-        addEdge(estCentral, boaVista, 15);
-        addEdge(estCentral, ciudadBolivar, 30);
-        addEdge(estCentral, puertoOrdaz, 12);
-        addEdge(estSur, puertoOrdaz, 20);
-        addEdge(estSur, tumeremo, 18);
+        loadPreset(NetworkPresets.PresetType.RORAIMA_CLASSIC);
     }
 }

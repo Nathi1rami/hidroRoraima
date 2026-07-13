@@ -14,6 +14,7 @@ import javax.swing.*;
  * - Node.java : Nodos del grafo (Embalse, Estacion, Barrio)
  * - Edge.java : Aristas/tuberias con capacidad y flujo
  * - NetworkGraph.java : Estructura del grafo con operaciones CRUD
+ * - NetworkPresets.java : Presets geograficos y generador procedural
  * - FordFulkersonSolver.java : Algoritmo Edmonds-Karp
  * - SimulationStep.java : Registro de pasos del algoritmo
  * - FlowResult.java : Resultados de la simulacion
@@ -24,6 +25,8 @@ import javax.swing.*;
  * - ControlPanel.java : Panel lateral de control
  * - NodeDialog.java : Dialogo para agregar/editar nodos
  * - EdgeDialog.java : Dialogo para agregar/editar tuberias
+ * - PresetDialog.java : Dialogo selector de presets y mapas
+ * - VenezuelaMapRenderer.java : Renderizador del mapa de Venezuela
  * - ThemeManager.java : Gestion centralizada del tema visual
  *
  * CONTROLADOR:

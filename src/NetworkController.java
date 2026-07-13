@@ -381,14 +381,16 @@ public class NetworkController {
     }
 
     /**
-     * Loads the preset Roraima water network.
+     * Opens the preset dialog for selecting a network preset or procedural generator.
      */
     public void loadPreset() {
-        int confirm = JOptionPane.showConfirmDialog(view,
-                "Cargar la red predeterminada 'Red Hidrica de Roraima'?\nEsto reemplazara la red actual.",
-                "Cargar Red Predeterminada", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (confirm == JOptionPane.YES_OPTION) {
-            model.loadPresetRoraima();
+        PresetDialog dialog = new PresetDialog(view);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed() && dialog.getSelectedType() != null) {
+            NetworkPresets.PresetType type = dialog.getSelectedType();
+            model.loadPreset(type);
+
             lastResult = null;
             inStepMode = false;
             currentStep = -1;
@@ -398,6 +400,9 @@ public class NetworkController {
             controlPanel.updateStepControls(-1, 0);
             controlPanel.resetEventUI();
 
+            // Show map for geographic presets, hide for procedural
+            canvas.setShowMap(!type.isProcedural());
+
             // Fit view after layout
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -406,9 +411,17 @@ public class NetworkController {
                 }
             });
 
-            view.setStatus("Red 'Hidrica de Roraima' cargada - " +
+            view.setStatus("Red '" + type.getDisplayName() + "' cargada - " +
                     model.getNodeCount() + " nodos, " + model.getEdgeCount() + " tuberias");
         }
+    }
+
+    /**
+     * Toggles the Venezuela map background on/off.
+     */
+    public void toggleMap() {
+        canvas.toggleMap();
+        view.setStatus(canvas.isShowMap() ? "Mapa de Venezuela activado" : "Mapa de Venezuela desactivado");
     }
 
     /**

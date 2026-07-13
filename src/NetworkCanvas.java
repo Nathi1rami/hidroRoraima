@@ -24,6 +24,7 @@ public class NetworkCanvas extends JPanel {
 
     private NetworkGraph graph;
     private NetworkController controller;
+    private final VenezuelaMapRenderer mapRenderer = new VenezuelaMapRenderer();
 
     // ─── Transform state ───────────────────────────
     private double zoom = 1.0;
@@ -137,6 +138,16 @@ public class NetworkCanvas extends JPanel {
     }
 
     public double getZoom() { return zoom; }
+
+    public boolean isShowMap() { return mapRenderer.isVisible(); }
+    public void setShowMap(boolean show) {
+        mapRenderer.setVisible(show);
+        repaint();
+    }
+    public void toggleMap() {
+        mapRenderer.setVisible(!mapRenderer.isVisible());
+        repaint();
+    }
 
     // ═══════════════════════════════════════════════
     // COORDINATE TRANSFORMS
@@ -481,6 +492,7 @@ public class NetworkCanvas extends JPanel {
         g2d.scale(zoom, zoom);
 
         // Render layers in order
+        mapRenderer.paintMap(g2d);
         paintGrid(g2d);
 
         for (Edge edge : graph.getEdges()) {
