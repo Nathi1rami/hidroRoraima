@@ -47,6 +47,7 @@ public class Node {
     private boolean highlighted;
     private Color highlightColor;
     private double currentFlow; // Current incoming/outgoing flow (post-simulation)
+    private boolean active; // Active status for failure simulation
 
     public Node(int id, String name, NodeType type, double x, double y, double capacity) {
         this.id = id;
@@ -59,6 +60,7 @@ public class Node {
         this.highlighted = false;
         this.highlightColor = null;
         this.currentFlow = 0;
+        this.active = true;
     }
 
     // ─── Getters ───────────────────────────────────
@@ -72,6 +74,7 @@ public class Node {
     public boolean isHighlighted() { return highlighted; }
     public Color getHighlightColor() { return highlightColor; }
     public double getCurrentFlow() { return currentFlow; }
+    public boolean isActive() { return active; }
 
     public boolean isSource() { return type == NodeType.EMBALSE; }
     public boolean isSink() { return type == NodeType.BARRIO; }
@@ -91,6 +94,7 @@ public class Node {
     public void setPosition(double x, double y) { this.x = x; this.y = y; }
     public void setCapacity(double capacity) { this.capacity = Math.max(0, capacity); }
     public void setSelected(boolean selected) { this.selected = selected; }
+    public void setActive(boolean active) { this.active = active; }
 
     public void setHighlighted(boolean highlighted, Color color) {
         this.highlighted = highlighted;

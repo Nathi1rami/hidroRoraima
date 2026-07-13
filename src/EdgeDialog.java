@@ -15,11 +15,13 @@ public class EdgeDialog extends JDialog {
     private JComboBox<Node> fromCombo;
     private JComboBox<Node> toCombo;
     private JSpinner capacitySpinner;
+    private JCheckBox activeCheck;
     private boolean confirmed = false;
 
     private Node resultFrom;
     private Node resultTo;
     private double resultCapacity;
+    private boolean resultActive = true;
 
     /**
      * Creates a dialog for adding a new edge.
@@ -34,7 +36,7 @@ public class EdgeDialog extends JDialog {
     public EdgeDialog(JFrame parent, List<Node> nodes, Edge existingEdge,
                       Node preselectedFrom, Node preselectedTo) {
         super(parent, existingEdge != null ? "Editar Tuberia" : "Agregar Tuberia", true);
-        setSize(380, 260);
+        setSize(380, 290);
         setLocationRelativeTo(parent);
         setResizable(false);
 
@@ -89,11 +91,19 @@ public class EdgeDialog extends JDialog {
         gbc.gridx = 1; gbc.gridy = 3;
         mainPanel.add(capacitySpinner, gbc);
 
+        // Active Checkbox
+        activeCheck = new JCheckBox("Activa (Operativa)", true);
+        activeCheck.setFont(ThemeManager.FONT_BODY);
+        activeCheck.setOpaque(false);
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        mainPanel.add(activeCheck, gbc);
+
         // Preselect or populate from existing
         if (existingEdge != null) {
             fromCombo.setSelectedItem(existingEdge.getFrom());
             toCombo.setSelectedItem(existingEdge.getTo());
             capacitySpinner.setValue(existingEdge.getCapacity());
+            activeCheck.setSelected(existingEdge.isActive());
             fromCombo.setEnabled(false);
             toCombo.setEnabled(false);
         } else {
@@ -124,6 +134,7 @@ public class EdgeDialog extends JDialog {
                     resultFrom = (Node) fromCombo.getSelectedItem();
                     resultTo = (Node) toCombo.getSelectedItem();
                     resultCapacity = (Double) capacitySpinner.getValue();
+                    resultActive = activeCheck.isSelected();
                     confirmed = true;
                     dispose();
                 }
@@ -133,7 +144,7 @@ public class EdgeDialog extends JDialog {
         buttonPanel.add(cancelBtn);
         buttonPanel.add(okBtn);
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.insets = new Insets(16, 6, 0, 6);
         mainPanel.add(buttonPanel, gbc);
@@ -163,4 +174,5 @@ public class EdgeDialog extends JDialog {
     public Node getResultFrom() { return resultFrom; }
     public Node getResultTo() { return resultTo; }
     public double getResultCapacity() { return resultCapacity; }
+    public boolean getResultActive() { return resultActive; }
 }

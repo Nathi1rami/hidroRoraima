@@ -18,6 +18,7 @@ public class Edge {
     private boolean highlighted;
     private Color highlightColor;
     private boolean isBottleneck;
+    private boolean active;     // Active status for failure simulation
 
     public Edge(int id, Node from, Node to, double capacity) {
         this.id = id;
@@ -28,6 +29,7 @@ public class Edge {
         this.highlighted = false;
         this.highlightColor = null;
         this.isBottleneck = false;
+        this.active = true;
     }
 
     // ─── Getters ───────────────────────────────────
@@ -39,6 +41,7 @@ public class Edge {
     public boolean isHighlighted() { return highlighted; }
     public Color getHighlightColor() { return highlightColor; }
     public boolean isBottleneck() { return isBottleneck; }
+    public boolean isActive() { return active; }
 
     /**
      * Returns the residual capacity (capacity - flow).
@@ -89,6 +92,7 @@ public class Edge {
 
     public void setBottleneck(boolean bottleneck) { this.isBottleneck = bottleneck; }
     public void resetFlow() { this.flow = 0; }
+    public void setActive(boolean active) { this.active = active; }
 
     @Override
     public String toString() {

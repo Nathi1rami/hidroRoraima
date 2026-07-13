@@ -43,17 +43,73 @@ public class ControlPanel extends JPanel {
 
     // ─── Per-barrio stats ──────────────────────────
     private JPanel barrioStatsPanel;
+    private JPanel alertsPanel;
+
+    // ─── Cards for CardLayout ──────────────────────
+    private CardLayout cardLayout;
+    private JPanel mainCard;
+    private JPanel eventsCard;
+    private JPanel activeContainer = null; // Redirects add() calls to build cards dynamically
+
+    // ─── Event components ──────────────────────────
+    private JButton btnGoToEvents;
+    private JButton btnBackToMain;
+    private JCheckBox chkRain;
+    private JCheckBox chkDrought;
+    private JCheckBox chkDemandPeak;
+    private JSpinner spinRainFactor;
+    private JSpinner spinDroughtFactor;
+    private JSpinner spinDemandFactor;
+    private JButton btnRandomBreakdown;
+    private JButton btnRestoreNet;
 
     public ControlPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        cardLayout = new CardLayout();
+        setLayout(cardLayout);
         setBackground(ThemeManager.BG_SIDEBAR);
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 1, 0, 0, ThemeManager.BORDER),
-                BorderFactory.createEmptyBorder(16, 16, 16, 16)
-        ));
-        setPreferredSize(new Dimension(280, 0));
+        setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, ThemeManager.BORDER));
 
+        mainCard = new JPanel();
+        mainCard.setLayout(new BoxLayout(mainCard, BoxLayout.Y_AXIS));
+        mainCard.setBackground(ThemeManager.BG_SIDEBAR);
+        mainCard.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        eventsCard = new JPanel();
+        eventsCard.setLayout(new BoxLayout(eventsCard, BoxLayout.Y_AXIS));
+        eventsCard.setBackground(ThemeManager.BG_SIDEBAR);
+        eventsCard.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        // Redirect add() calls to mainCard
+        activeContainer = mainCard;
         buildUI();
+
+        // Redirect add() calls to eventsCard
+        activeContainer = eventsCard;
+        buildEventsUI();
+
+        // Disable redirection to add cards directly to this panel
+        activeContainer = null;
+        super.add(mainCard, "MAIN");
+        super.add(eventsCard, "EVENTS");
+
+        cardLayout.show(this, "MAIN");
+    }
+
+    @Override
+    public Component add(Component comp) {
+        if (activeContainer != null) {
+            return activeContainer.add(comp);
+        }
+        return super.add(comp);
+    }
+
+    @Override
+    public void add(Component comp, Object constraints) {
+        if (activeContainer != null) {
+            activeContainer.add(comp, constraints);
+        } else {
+            super.add(comp, constraints);
+        }
     }
 
     public void setController(NetworkController controller) {
@@ -173,12 +229,25 @@ public class ControlPanel extends JPanel {
         barrioStatsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(barrioStatsPanel);
 
+        add(Box.createVerticalStrut(12));
+
+        // System Alerts Section
+        add(createSectionLabel("Alertas del Sistema"));
+        add(Box.createVerticalStrut(4));
+        alertsPanel = new JPanel();
+        alertsPanel.setLayout(new BoxLayout(alertsPanel, BoxLayout.Y_AXIS));
+        alertsPanel.setOpaque(false);
+        alertsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(alertsPanel);
+
         add(Box.createVerticalGlue());
         add(Box.createVerticalStrut(16));
         add(createSeparator());
         add(Box.createVerticalStrut(12));
 
         // ─── Tools Section ─────────────────────────
+        btnGoToEvents = ThemeManager.createStyledButton("Eventos de Simulacion \u2699\uFE0F", new Color(63, 81, 181),
+                new Color(92, 107, 192));
         btnLoadPreset = ThemeManager.createStyledButton("Cargar Red Predeterminada", ThemeManager.BTN_PRIMARY,
                 ThemeManager.BTN_PRIMARY_HOVER);
         btnFitView = ThemeManager.createStyledButton("Ajustar Vista", new Color(97, 97, 97),
@@ -188,6 +257,8 @@ public class ControlPanel extends JPanel {
         btnClear = ThemeManager.createStyledButton("Limpiar Todo", ThemeManager.BTN_DANGER,
                 ThemeManager.BTN_DANGER_HOVER);
 
+        addFullWidthButton(btnGoToEvents);
+        add(Box.createVerticalStrut(4));
         addFullWidthButton(btnLoadPreset);
         add(Box.createVerticalStrut(4));
         addFullWidthButton(btnFitView);
@@ -236,6 +307,64 @@ public class ControlPanel extends JPanel {
         btnFitView.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) { controller.fitView(); }
         });
+        btnGoToEvents.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) { cardLayout.show(ControlPanel.this, "EVENTS"); }
+        });
+        btnBackToMain.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) { cardLayout.show(ControlPanel.this, "MAIN"); }
+        });
+
+        // Event change listeners
+        chkRain.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (chkRain.isSelected()) {
+                    chkDrought.setSelected(false);
+                }
+                updateEventsInController();
+            }
+        });
+
+        chkDrought.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (chkDrought.isSelected()) {
+                    chkRain.setSelected(false);
+                }
+                updateEventsInController();
+            }
+        });
+
+        chkDemandPeak.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateEventsInController();
+            }
+        });
+
+        javax.swing.event.ChangeListener spinListener = new javax.swing.event.ChangeListener() {
+            @Override
+            public void stateChanged(javax.swing.event.ChangeEvent e) {
+                updateEventsInController();
+            }
+        };
+        spinRainFactor.addChangeListener(spinListener);
+        spinDroughtFactor.addChangeListener(spinListener);
+        spinDemandFactor.addChangeListener(spinListener);
+
+        btnRandomBreakdown.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (controller != null) controller.triggerRandomBreakdown();
+            }
+        });
+
+        btnRestoreNet.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (controller != null) controller.restoreAllInfrastructure();
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════
@@ -270,6 +399,8 @@ public class ControlPanel extends JPanel {
             lblSatisfaction.setForeground(ThemeManager.TEXT_PRIMARY);
             barrioStatsPanel.removeAll();
             barrioStatsPanel.revalidate();
+            alertsPanel.removeAll();
+            alertsPanel.revalidate();
         }
     }
 
@@ -308,6 +439,36 @@ public class ControlPanel extends JPanel {
 
         barrioStatsPanel.revalidate();
         barrioStatsPanel.repaint();
+    }
+
+    /**
+     * Updates the system alerts panel in the sidebar.
+     */
+    public void updateAlerts(java.util.List<String> alerts) {
+        alertsPanel.removeAll();
+        if (alerts == null || alerts.isEmpty()) {
+            JLabel lbl = new JLabel("<html><span style='color:#2E7D32'>✔ Sin alertas activas</span></html>");
+            lbl.setFont(ThemeManager.FONT_SMALL);
+            alertsPanel.add(lbl);
+        } else {
+            for (String alert : alerts) {
+                String colorStr = "#212121";
+                if (alert.startsWith("🔴")) {
+                    colorStr = "#D32F2F";
+                } else if (alert.startsWith("🟠")) {
+                    colorStr = "#E65100";
+                } else if (alert.startsWith("🟡")) {
+                    colorStr = "#FBC02D";
+                }
+                
+                JLabel lbl = new JLabel("<html><span style='color:" + colorStr + "'>" + alert + "</span></html>");
+                lbl.setFont(ThemeManager.FONT_SMALL);
+                alertsPanel.add(lbl);
+                alertsPanel.add(Box.createVerticalStrut(2));
+            }
+        }
+        alertsPanel.revalidate();
+        alertsPanel.repaint();
     }
 
     /**
@@ -372,5 +533,150 @@ public class ControlPanel extends JPanel {
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         add(button);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        Dimension d = super.getPreferredSize();
+        return new Dimension(280, d.height);
+    }
+
+    /**
+     * Resets the events user interface components to their default states.
+     */
+    public void resetEventUI() {
+        if (chkRain != null) chkRain.setSelected(false);
+        if (chkDrought != null) chkDrought.setSelected(false);
+        if (chkDemandPeak != null) chkDemandPeak.setSelected(false);
+        if (spinRainFactor != null) spinRainFactor.setValue(50);
+        if (spinDroughtFactor != null) spinDroughtFactor.setValue(50);
+        if (spinDemandFactor != null) spinDemandFactor.setValue(50);
+    }
+
+    /**
+     * Converts UI state into factor parameters and notifies the controller.
+     */
+    private void updateEventsInController() {
+        if (controller == null) return;
+        
+        boolean rain = chkRain.isSelected();
+        boolean drought = chkDrought.isSelected();
+        boolean peak = chkDemandPeak.isSelected();
+
+        // Convert percentage to factor
+        double rainPct = ((Number) spinRainFactor.getValue()).doubleValue();
+        double rainFactor = 1.0 + (rainPct / 100.0);
+
+        double droughtPct = ((Number) spinDroughtFactor.getValue()).doubleValue();
+        double droughtFactor = 1.0 - (droughtPct / 100.0);
+
+        double demandPct = ((Number) spinDemandFactor.getValue()).doubleValue();
+        double demandFactor = 1.0 + (demandPct / 100.0);
+
+        controller.updateSimulationEvents(rain, rainFactor, drought, droughtFactor, peak, demandFactor);
+    }
+
+    /**
+     * Builds the Events Card UI inside ControlPanel.
+     */
+    private void buildEventsUI() {
+        // Header
+        JLabel header = new JLabel("Eventos de Simulacion");
+        header.setFont(ThemeManager.FONT_HEADER);
+        header.setForeground(ThemeManager.BG_HEADER);
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(header);
+        add(Box.createVerticalStrut(16));
+
+        // Back button
+        btnBackToMain = ThemeManager.createStyledButton("\u2190 Volver al Menu", new Color(97, 97, 97), new Color(117, 117, 117));
+        addFullWidthButton(btnBackToMain);
+        add(Box.createVerticalStrut(20));
+        add(createSeparator());
+        add(Box.createVerticalStrut(16));
+
+        // Event checkboxes and Spinners
+        add(createSectionLabel("Eventos Ambientales"));
+        add(Box.createVerticalStrut(8));
+
+        // 1. Rain
+        chkRain = new JCheckBox("Lluvia / Tormenta \uD83C\uDF27\uFE0F");
+        chkRain.setFont(ThemeManager.FONT_BODY_BOLD);
+        chkRain.setOpaque(false);
+        chkRain.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(chkRain);
+        
+        JPanel rainFactorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        rainFactorPanel.setOpaque(false);
+        rainFactorPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblRain = new JLabel("Aumento oferta:");
+        lblRain.setFont(ThemeManager.FONT_SMALL);
+        spinRainFactor = new JSpinner(new SpinnerNumberModel(50, 0, 1000, 10));
+        spinRainFactor.setPreferredSize(new Dimension(65, 20));
+        JLabel lblRainPct = new JLabel("%");
+        lblRainPct.setFont(ThemeManager.FONT_SMALL);
+        rainFactorPanel.add(lblRain);
+        rainFactorPanel.add(spinRainFactor);
+        rainFactorPanel.add(lblRainPct);
+        add(rainFactorPanel);
+        add(Box.createVerticalStrut(12));
+
+        // 2. Drought
+        chkDrought = new JCheckBox("Sequia Extrema \u2600\uFE0F");
+        chkDrought.setFont(ThemeManager.FONT_BODY_BOLD);
+        chkDrought.setOpaque(false);
+        chkDrought.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(chkDrought);
+        
+        JPanel droughtFactorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        droughtFactorPanel.setOpaque(false);
+        droughtFactorPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblDrought = new JLabel("Reduccion oferta:");
+        lblDrought.setFont(ThemeManager.FONT_SMALL);
+        spinDroughtFactor = new JSpinner(new SpinnerNumberModel(50, 0, 100, 10));
+        spinDroughtFactor.setPreferredSize(new Dimension(65, 20));
+        JLabel lblDroughtPct = new JLabel("%");
+        lblDroughtPct.setFont(ThemeManager.FONT_SMALL);
+        droughtFactorPanel.add(lblDrought);
+        droughtFactorPanel.add(spinDroughtFactor);
+        droughtFactorPanel.add(lblDroughtPct);
+        add(droughtFactorPanel);
+        add(Box.createVerticalStrut(12));
+
+        // 3. Demand Peak
+        chkDemandPeak = new JCheckBox("Pico de Demanda \uD83D\uDD25");
+        chkDemandPeak.setFont(ThemeManager.FONT_BODY_BOLD);
+        chkDemandPeak.setOpaque(false);
+        chkDemandPeak.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(chkDemandPeak);
+        
+        JPanel demandFactorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        demandFactorPanel.setOpaque(false);
+        demandFactorPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblDemand = new JLabel("Aumento demanda:");
+        lblDemand.setFont(ThemeManager.FONT_SMALL);
+        spinDemandFactor = new JSpinner(new SpinnerNumberModel(50, 0, 1000, 10));
+        spinDemandFactor.setPreferredSize(new Dimension(65, 20));
+        JLabel lblDemandPct = new JLabel("%");
+        lblDemandPct.setFont(ThemeManager.FONT_SMALL);
+        demandFactorPanel.add(lblDemand);
+        demandFactorPanel.add(spinDemandFactor);
+        demandFactorPanel.add(lblDemandPct);
+        add(demandFactorPanel);
+        add(Box.createVerticalStrut(20));
+        add(createSeparator());
+        add(Box.createVerticalStrut(16));
+
+        // Infrastructure events
+        add(createSectionLabel("Eventos de Infraestructura"));
+        add(Box.createVerticalStrut(8));
+
+        btnRandomBreakdown = ThemeManager.createStyledButton("Provocar Averia Aleatoria \uD83D\uDCA5", ThemeManager.BTN_DANGER, ThemeManager.BTN_DANGER_HOVER);
+        btnRestoreNet = ThemeManager.createStyledButton("Restaurar Red Completa \u2705", ThemeManager.BTN_SUCCESS, ThemeManager.BTN_SUCCESS_HOVER);
+
+        addFullWidthButton(btnRandomBreakdown);
+        add(Box.createVerticalStrut(8));
+        addFullWidthButton(btnRestoreNet);
+        add(Box.createVerticalStrut(16));
     }
 }

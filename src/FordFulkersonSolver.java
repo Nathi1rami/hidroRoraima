@@ -67,13 +67,23 @@ public class FordFulkersonSolver {
         // Super-source to all embalses
         for (Node source : sources) {
             int srcIdx = nodeIdToIndex.get(source.getId());
-            capacity[superSourceIdx][srcIdx] = source.getCapacity();
+            double cap = source.getCapacity();
+            if (graph.isEventRainActive()) {
+                cap *= graph.getEventRainFactor();
+            } else if (graph.isEventDroughtActive()) {
+                cap *= graph.getEventDroughtFactor();
+            }
+            capacity[superSourceIdx][srcIdx] = source.isActive() ? cap : 0;
         }
 
         // All barrios to super-sink
         for (Node sink : sinks) {
             int sinkIdx = nodeIdToIndex.get(sink.getId());
-            capacity[sinkIdx][superSinkIdx] = sink.getCapacity();
+            double dem = sink.getCapacity();
+            if (graph.isEventDemandPeakActive()) {
+                dem *= graph.getEventDemandPeakFactor();
+            }
+            capacity[sinkIdx][superSinkIdx] = sink.isActive() ? dem : 0;
         }
 
         // Network edges
@@ -81,7 +91,11 @@ public class FordFulkersonSolver {
         for (Edge edge : allEdges) {
             int fromIdx = nodeIdToIndex.get(edge.getFrom().getId());
             int toIdx = nodeIdToIndex.get(edge.getTo().getId());
-            capacity[fromIdx][toIdx] = edge.getCapacity();
+            if (edge.isActive() && edge.getFrom().isActive() && edge.getTo().isActive()) {
+                capacity[fromIdx][toIdx] = edge.getCapacity();
+            } else {
+                capacity[fromIdx][toIdx] = 0;
+            }
             edgeLookup.put(fromIdx + "," + toIdx, edge);
         }
 

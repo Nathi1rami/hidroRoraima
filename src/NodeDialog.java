@@ -15,11 +15,13 @@ public class NodeDialog extends JDialog {
     private JComboBox<Node.NodeType> typeCombo;
     private JSpinner capacitySpinner;
     private JLabel capacityLabel;
+    private JCheckBox activeCheck;
     private boolean confirmed = false;
 
     private String resultName;
     private Node.NodeType resultType;
     private double resultCapacity;
+    private boolean resultActive = true;
 
     /**
      * Creates a dialog for adding a new node.
@@ -33,7 +35,7 @@ public class NodeDialog extends JDialog {
      */
     public NodeDialog(JFrame parent, Node existingNode, Node.NodeType defaultType) {
         super(parent, existingNode != null ? "Editar Nodo" : "Agregar Nodo", true);
-        setSize(380, 280);
+        setSize(380, 310);
         setLocationRelativeTo(parent);
         setResizable(false);
 
@@ -98,11 +100,19 @@ public class NodeDialog extends JDialog {
         });
         updateCapacityLabel();
 
+        // Active Checkbox
+        activeCheck = new JCheckBox("Activo (Operativo)", true);
+        activeCheck.setFont(ThemeManager.FONT_BODY);
+        activeCheck.setOpaque(false);
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        mainPanel.add(activeCheck, gbc);
+
         // Populate fields if editing
         if (existingNode != null) {
             nameField.setText(existingNode.getName());
             typeCombo.setSelectedItem(existingNode.getType());
             capacitySpinner.setValue(existingNode.getCapacity());
+            activeCheck.setSelected(existingNode.isActive());
         }
 
         // Buttons
@@ -128,6 +138,7 @@ public class NodeDialog extends JDialog {
                     resultName = nameField.getText().trim();
                     resultType = (Node.NodeType) typeCombo.getSelectedItem();
                     resultCapacity = (Double) capacitySpinner.getValue();
+                    resultActive = activeCheck.isSelected();
                     confirmed = true;
                     dispose();
                 }
@@ -137,7 +148,7 @@ public class NodeDialog extends JDialog {
         buttonPanel.add(cancelBtn);
         buttonPanel.add(okBtn);
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.insets = new Insets(16, 6, 0, 6);
         mainPanel.add(buttonPanel, gbc);
@@ -174,4 +185,5 @@ public class NodeDialog extends JDialog {
     public String getResultName() { return resultName; }
     public Node.NodeType getResultType() { return resultType; }
     public double getResultCapacity() { return resultCapacity; }
+    public boolean getResultActive() { return resultActive; }
 }

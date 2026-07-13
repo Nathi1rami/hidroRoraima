@@ -239,6 +239,14 @@ public class NetworkGraph {
         for (Edge e : edges) e.clearHighlight();
     }
 
+    private boolean eventRain = false;
+    private boolean eventDrought = false;
+    private boolean eventDemandPeak = false;
+
+    private double eventRainFactor = 1.5;         // Default: +50%
+    private double eventDroughtFactor = 0.5;      // Default: -50%
+    private double eventDemandPeakFactor = 1.5;   // Default: +50%
+
     /**
      * Clears the entire graph.
      */
@@ -247,7 +255,31 @@ public class NetworkGraph {
         edges.clear();
         nextNodeId = 1;
         nextEdgeId = 1;
+        eventRain = false;
+        eventDrought = false;
+        eventDemandPeak = false;
+        eventRainFactor = 1.5;
+        eventDroughtFactor = 0.5;
+        eventDemandPeakFactor = 1.5;
     }
+
+    public boolean isEventRainActive() { return eventRain; }
+    public void setEventRainActive(boolean active) { this.eventRain = active; }
+
+    public boolean isEventDroughtActive() { return eventDrought; }
+    public void setEventDroughtActive(boolean active) { this.eventDrought = active; }
+
+    public boolean isEventDemandPeakActive() { return eventDemandPeak; }
+    public void setEventDemandPeakActive(boolean active) { this.eventDemandPeak = active; }
+
+    public double getEventRainFactor() { return eventRainFactor; }
+    public void setEventRainFactor(double factor) { this.eventRainFactor = factor; }
+
+    public double getEventDroughtFactor() { return eventDroughtFactor; }
+    public void setEventDroughtFactor(double factor) { this.eventDroughtFactor = factor; }
+
+    public double getEventDemandPeakFactor() { return eventDemandPeakFactor; }
+    public void setEventDemandPeakFactor(double factor) { this.eventDemandPeakFactor = factor; }
 
     /**
      * Validates that the network has at least one source, one sink, and edges.

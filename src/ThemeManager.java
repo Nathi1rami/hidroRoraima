@@ -83,6 +83,14 @@ public class ThemeManager {
     public static final Color SATISFACTION_LOW = new Color(244, 67, 54);
 
     // ═══════════════════════════════════════════════
+    // ALERT COLORS
+    // ═══════════════════════════════════════════════
+    public static final Color COLOR_ALERT_CRITICAL = new Color(211, 47, 47);
+    public static final Color COLOR_ALERT_MEDIUM = new Color(230, 81, 0);
+    public static final Color COLOR_ALERT_WARNING = new Color(251, 192, 45);
+    public static final Color COLOR_FAILED_ELEMENT = new Color(120, 120, 120);
+
+    // ═══════════════════════════════════════════════
     // GRID
     // ═══════════════════════════════════════════════
     public static final Color GRID_LINE = new Color(230, 235, 240);

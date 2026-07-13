@@ -60,6 +60,13 @@ public class NetworkCanvas extends JPanel {
         }
     }
 
+    private List<String> activeAlerts = new ArrayList<String>();
+
+    public void setAlerts(List<String> alerts) {
+        this.activeAlerts = alerts;
+        repaint();
+    }
+
     public NetworkCanvas() {
         setBackground(ThemeManager.BG_CANVAS);
         setDoubleBuffered(true);
@@ -302,6 +309,17 @@ public class NetworkCanvas extends JPanel {
             });
             menu.add(deleteItem);
 
+            JMenuItem toggleActiveItem = new JMenuItem(node.isActive() ? "Simular Falla (Desactivar)" : "Restaurar (Activar)");
+            toggleActiveItem.setFont(ThemeManager.FONT_BODY);
+            toggleActiveItem.setForeground(node.isActive() ? ThemeManager.COLOR_ALERT_CRITICAL : ThemeManager.BTN_SUCCESS);
+            toggleActiveItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent a) {
+                    if (controller != null) controller.toggleNodeActive(node);
+                }
+            });
+            menu.add(toggleActiveItem);
+
             menu.addSeparator();
 
             JMenuItem connectItem = new JMenuItem("Conectar desde aqui");
@@ -337,6 +355,17 @@ public class NetworkCanvas extends JPanel {
                 }
             });
             menu.add(deleteItem);
+
+            JMenuItem toggleActiveItem = new JMenuItem(edge.isActive() ? "Simular Falla (Desactivar)" : "Restaurar (Activar)");
+            toggleActiveItem.setFont(ThemeManager.FONT_BODY);
+            toggleActiveItem.setForeground(edge.isActive() ? ThemeManager.COLOR_ALERT_CRITICAL : ThemeManager.BTN_SUCCESS);
+            toggleActiveItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent a) {
+                    if (controller != null) controller.toggleEdgeActive(edge);
+                }
+            });
+            menu.add(toggleActiveItem);
 
         } else {
             // Click on empty space — add nodes
@@ -528,10 +557,16 @@ public class NetworkCanvas extends JPanel {
 
         // Color based on state
         Color pipeColor;
-        if (edge.isHighlighted() && edge.getHighlightColor() != null) {
+        if (!edge.isActive()) {
+            pipeColor = ThemeManager.COLOR_FAILED_ELEMENT;
+        } else if (edge.isHighlighted() && edge.getHighlightColor() != null) {
             pipeColor = edge.getHighlightColor();
         } else if (edge.isBottleneck()) {
             pipeColor = ThemeManager.ALGO_BOTTLENECK;
+        } else if (edge.getUtilization() >= 1.0) {
+            pipeColor = ThemeManager.COLOR_ALERT_MEDIUM;
+        } else if (edge.getUtilization() >= 0.8) {
+            pipeColor = ThemeManager.COLOR_ALERT_WARNING;
         } else {
             pipeColor = ThemeManager.getPipeFlowColor(edge.getUtilization());
         }
@@ -543,12 +578,22 @@ public class NetworkCanvas extends JPanel {
 
         // Outline
         g2d.setColor(ThemeManager.PIPE_BORDER);
-        g2d.setStroke(new BasicStroke(pipeWidth + 1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        if (!edge.isActive()) {
+            g2d.setStroke(new BasicStroke(pipeWidth + 1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    1.0f, new float[]{6f, 6f}, 0f));
+        } else {
+            g2d.setStroke(new BasicStroke(pipeWidth + 1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        }
         g2d.draw(new Line2D.Double(x1, y1, x2, y2));
 
         // Fill
         g2d.setColor(pipeColor);
-        g2d.setStroke(new BasicStroke(pipeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        if (!edge.isActive()) {
+            g2d.setStroke(new BasicStroke(pipeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    1.0f, new float[]{6f, 6f}, 0f));
+        } else {
+            g2d.setStroke(new BasicStroke(pipeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        }
         g2d.draw(new Line2D.Double(x1, y1, x2, y2));
 
         // Direction arrow
@@ -656,9 +701,18 @@ public class NetworkCanvas extends JPanel {
         boolean isSelected = node.isSelected();
         boolean isHighlighted = node.isHighlighted();
 
-        Color primary = ThemeManager.getNodePrimaryColor(node.getType());
-        Color secondary = ThemeManager.getNodeSecondaryColor(node.getType());
-        Color gradient = ThemeManager.getNodeGradientColor(node.getType());
+        Color primary;
+        Color secondary;
+        Color gradient;
+        if (!node.isActive()) {
+            primary = ThemeManager.COLOR_FAILED_ELEMENT;
+            secondary = new Color(180, 180, 180);
+            gradient = new Color(210, 210, 210);
+        } else {
+            primary = ThemeManager.getNodePrimaryColor(node.getType());
+            secondary = ThemeManager.getNodeSecondaryColor(node.getType());
+            gradient = ThemeManager.getNodeGradientColor(node.getType());
+        }
 
         if (node.getType() == Node.NodeType.ESTACION) {
             paintStationNode(g2d, node, x, y, primary, secondary, gradient, isHovered, isSelected, isHighlighted);
@@ -710,6 +764,18 @@ public class NetworkCanvas extends JPanel {
             g2d.setStroke(new BasicStroke(1.5f));
         }
         g2d.draw(shape);
+
+        // Warning Badge if Inactive
+        if (!node.isActive()) {
+            double bx = drawX + w - 18;
+            double by = drawY + 4;
+            g2d.setColor(ThemeManager.COLOR_ALERT_CRITICAL);
+            g2d.fill(new Ellipse2D.Double(bx, by, 14, 14));
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            FontMetrics metrics = g2d.getFontMetrics();
+            g2d.drawString("!", (float)(bx + 7 - metrics.stringWidth("!") / 2.0), (float)(by + 11));
+        }
 
         // Icon
         paintNodeIcon(g2d, node, x, y - 8);
@@ -791,6 +857,18 @@ public class NetworkCanvas extends JPanel {
             g2d.setStroke(new BasicStroke(1.5f));
         }
         g2d.draw(shape);
+
+        // Warning Badge if Inactive
+        if (!node.isActive()) {
+            double bx = x + radius - 16;
+            double by = y - radius + 2;
+            g2d.setColor(ThemeManager.COLOR_ALERT_CRITICAL);
+            g2d.fill(new Ellipse2D.Double(bx, by, 14, 14));
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            FontMetrics metrics = g2d.getFontMetrics();
+            g2d.drawString("!", (float)(bx + 7 - metrics.stringWidth("!") / 2.0), (float)(by + 11));
+        }
 
         // Gear icon
         paintGearIcon(g2d, x, y - 3, 10);
@@ -891,6 +969,59 @@ public class NetworkCanvas extends JPanel {
         g2d.setFont(ThemeManager.FONT_SMALL);
         g2d.setColor(ThemeManager.TEXT_SECONDARY);
         g2d.drawString(zoomText, 10, getHeight() - 10);
+
+        // Glassmorphic Alerts Panel
+        if (activeAlerts != null && !activeAlerts.isEmpty()) {
+            int cardX = 16;
+            int cardY = 16;
+            int cardW = 280;
+            int itemH = 20;
+            int cardH = 32 + activeAlerts.size() * itemH;
+
+            // Background shadow
+            g2d.setColor(new Color(0, 0, 0, 15));
+            g2d.fillRoundRect(cardX + 2, cardY + 2, cardW, cardH, 12, 12);
+
+            // Glassmorphic Background (opaque white-ish with border)
+            g2d.setColor(new Color(255, 255, 255, 220));
+            g2d.fillRoundRect(cardX, cardY, cardW, cardH, 12, 12);
+            g2d.setColor(new Color(210, 215, 225));
+            g2d.setStroke(new BasicStroke(1.2f));
+            g2d.drawRoundRect(cardX, cardY, cardW, cardH, 12, 12);
+
+            // Title
+            g2d.setFont(ThemeManager.FONT_BODY_BOLD);
+            g2d.setColor(ThemeManager.BG_HEADER);
+            g2d.drawString("Alertas del Sistema (" + activeAlerts.size() + ")", cardX + 12, cardY + 22);
+
+            // Items
+            g2d.setFont(ThemeManager.FONT_SMALL);
+            int y = cardY + 42;
+            for (String alert : activeAlerts) {
+                if (alert.startsWith("🔴")) {
+                    g2d.setColor(ThemeManager.COLOR_ALERT_CRITICAL);
+                    g2d.drawString("●", cardX + 12, y);
+                    g2d.setColor(ThemeManager.TEXT_PRIMARY);
+                    g2d.drawString(alert.substring(2), cardX + 26, y);
+                } else if (alert.startsWith("🟠")) {
+                    g2d.setColor(ThemeManager.COLOR_ALERT_MEDIUM);
+                    g2d.drawString("■", cardX + 12, y);
+                    g2d.setColor(ThemeManager.TEXT_PRIMARY);
+                    g2d.drawString(alert.substring(2), cardX + 26, y);
+                } else if (alert.startsWith("🟡")) {
+                    g2d.setColor(ThemeManager.COLOR_ALERT_WARNING);
+                    g2d.drawString("▲", cardX + 12, y);
+                    g2d.setColor(ThemeManager.TEXT_PRIMARY);
+                    g2d.drawString(alert.substring(2), cardX + 26, y);
+                } else {
+                    g2d.setColor(ThemeManager.TEXT_SECONDARY);
+                    g2d.drawString("-", cardX + 12, y);
+                    g2d.setColor(ThemeManager.TEXT_PRIMARY);
+                    g2d.drawString(alert, cardX + 26, y);
+                }
+                y += itemH;
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════

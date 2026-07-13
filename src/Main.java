@@ -11,23 +11,23 @@ import javax.swing.*;
  * Arquitectura: MVC (Modelo-Vista-Controlador)
  *
  * MODELO:
- *   - Node.java         : Nodos del grafo (Embalse, Estacion, Barrio)
- *   - Edge.java         : Aristas/tuberias con capacidad y flujo
- *   - NetworkGraph.java  : Estructura del grafo con operaciones CRUD
- *   - FordFulkersonSolver.java : Algoritmo Edmonds-Karp
- *   - SimulationStep.java : Registro de pasos del algoritmo
- *   - FlowResult.java    : Resultados de la simulacion
+ * - Node.java : Nodos del grafo (Embalse, Estacion, Barrio)
+ * - Edge.java : Aristas/tuberias con capacidad y flujo
+ * - NetworkGraph.java : Estructura del grafo con operaciones CRUD
+ * - FordFulkersonSolver.java : Algoritmo Edmonds-Karp
+ * - SimulationStep.java : Registro de pasos del algoritmo
+ * - FlowResult.java : Resultados de la simulacion
  *
  * VISTA:
- *   - MainFrame.java     : Ventana principal
- *   - NetworkCanvas.java  : Canvas interactivo con animaciones
- *   - ControlPanel.java   : Panel lateral de control
- *   - NodeDialog.java     : Dialogo para agregar/editar nodos
- *   - EdgeDialog.java     : Dialogo para agregar/editar tuberias
- *   - ThemeManager.java   : Gestion centralizada del tema visual
+ * - MainFrame.java : Ventana principal
+ * - NetworkCanvas.java : Canvas interactivo con animaciones
+ * - ControlPanel.java : Panel lateral de control
+ * - NodeDialog.java : Dialogo para agregar/editar nodos
+ * - EdgeDialog.java : Dialogo para agregar/editar tuberias
+ * - ThemeManager.java : Gestion centralizada del tema visual
  *
  * CONTROLADOR:
- *   - NetworkController.java : Coordinador MVC
+ * - NetworkController.java : Coordinador MVC
  *
  * @author HidroRoraima Team
  * @version 1.0
